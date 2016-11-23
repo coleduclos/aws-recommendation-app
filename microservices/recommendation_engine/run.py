@@ -1,5 +1,6 @@
 import sys, getopt
 import json
+from decimal import *
 import config
 import dynamodb_client
 
@@ -37,17 +38,25 @@ def process_messages(sqs_queue):
 def update_similar_users(rating):
     compared_user_list = [] 
     user_ratings_map = {}
+    user_id = rating['user-id']
 
     # Get all ratings by the user
-    user_ratings = dynamodb_client.get_all_ratings_by_user_id(rating['user-id'])['Items']
-
+    user_ratings = dynamodb_client.get_all_ratings_by_user_id(user_id)['Items']
+    
+    # Get similar users
+    user_similarity_index_map = dynamodb_client.get_similarity_index_map_by_user_id(user_id)['Items']
+    if len(user_similarity_index_map) > 0:
+        user_similarity_index_map = user_similarity_index_map[0]['similarity-index-map']
+    else:
+        user_similarity_index_map = {}
+    
     # For each user rating get a unique set of users who have also rated the same restaurants
     for u_rating in user_ratings:
         user_ratings_map[u_rating['restaurant-id']] = u_rating['rating-value'] 
         compared_user_list += \
             dynamodb_client.get_ratings_attribute_by_restaurant_id(u_rating['restaurant-id'],'user-id')['Items']
     compared_user_set = set([x['user-id'] for x in compared_user_list])
-    compared_user_set.discard(rating['user-id'])
+    compared_user_set.discard(user_id)
 
     # For each comparing user compute the similarity index
     for compared_user in compared_user_set:
@@ -68,7 +77,11 @@ def update_similar_users(rating):
                  similarity_idx_numerator += 1 
              else:
                  similarity_idx_numerator -= 1
-        similarity_idx = float(similarity_idx_numerator) / float(similarity_idx_demoninator)
+        similarity_idx = Decimal(similarity_idx_numerator) / Decimal(similarity_idx_demoninator)
+        user_similarity_index_map[compared_user] = similarity_idx
+
+    # Update the user similarity index map
+    dynamodb_client.update_user_similarity_index_map(user_id, user_similarity_index_map)
 
 if __name__ == "__main__":
     main()
