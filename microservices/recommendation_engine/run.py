@@ -35,10 +35,17 @@ def process_messages(sqs_queue):
         # message.delete()
         
 def update_similar_users(rating):
-    user_ratings = dynamodb_client.get_all_ratings_by_user_id(rating['user-id'])
-    restaurant_ratings = dynamodb_client.get_all_ratings_by_restaurant_id(rating['restaurant-id'])
-    for item in restaurant_ratings['Items']:
-        print item
+    compared_user_list = [] 
+    user_ratings_map = {}
+    user_ratings = dynamodb_client.get_all_ratings_by_user_id(rating['user-id'])['Items']
+
+    for u_rating in user_ratings:
+        user_ratings_map[u_rating['restaurant-id']] = u_rating['rating-value'] 
+        compared_user_list += \
+            dynamodb_client.get_ratings_attribute_by_restaurant_id(u_rating['restaurant-id'],'user-id')['Items']
+    compared_user_set = set([x['user-id'] for x in compared_user_list])
+    print compared_user_set
+     
 
 if __name__ == "__main__":
     main()
