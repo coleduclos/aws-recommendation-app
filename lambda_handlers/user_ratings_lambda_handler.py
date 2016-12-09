@@ -5,7 +5,7 @@ import os
 print('Loading function')
 
 user_ratings_dynamo_table_name = os.environ['user_ratings_dynamo_table_name']
-recommend_queue_name = os.environ['recommend_queue_name']
+queue_name = os.environ['queue_name']
 user_ratings_dynamo_pkey = os.environ['user_ratings_dynamo_pkey']
 user_ratings_dynamo_skey = os.environ['user_ratings_dynamo_skey']
 
@@ -40,7 +40,7 @@ def lambda_handler(event, context):
         operations[operation](dynamo, payload)
         
         sqs = boto3.resource('sqs')
-        queue = sqs.get_queue_by_name(QueueName=recommend_queue_name)
+        queue = sqs.get_queue_by_name(QueueName=queue_name)
         response = queue.send_message(MessageBody=json.dumps(event))
         
         return respond(None, response)
