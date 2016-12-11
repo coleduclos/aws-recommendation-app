@@ -61,6 +61,21 @@ def get_similarity_index_map_by_user_id (user_id):
     )
     return response
 
+def get_all_restaurants_by_zip_code (zip_code):
+    print('Querying DynamoDB for all restaurants with zip code: {} in table {}'
+        .format(zip_code, config.restaurant_dynamodb_table_name))
+    response = config.restaurant_dynamodb_table.query(
+        IndexName=config.zip_code_avg_rating_value_index,
+        KeyConditionExpression='#partitionkey = :partitionkeyval',
+        ExpressionAttributeNames={
+            '#partitionkey' : config.zip_code_avg_rating_value_index_pkey
+        },
+        ExpressionAttributeValues={
+            ':partitionkeyval' : zip_code 
+        }
+    )
+    return response
+
 def update_user_similarity_index_map (user_id, similarity_index_map):
     print('Updating DynamoDB with similarity index map for  user: {} in table {}'
         .format(user_id, config.similar_users_dynamodb_table_name))

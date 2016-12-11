@@ -9,6 +9,16 @@ recommendation_queue_name = 'duclos-app-recommendation-queue'
 
 dynamodb = boto3.resource('dynamodb', region_name=aws_region)
 
+user_ratings_dynamodb_table_name = 'duclos-app-user-ratings'
+user_ratings_dynamodb_table = dynamodb.Table(user_ratings_dynamodb_table_name)
+user_id_rating_value_index = 'user-id-rating-value-index'
+user_id_rating_value_index_pkey = 'user-id'
+
+restaurant_dynamodb_table_name = 'duclos-app-restaurants'
+restaurant_dynamodb_table = dynamodb.Table(restaurant_dynamodb_table_name)
+zip_code_avg_rating_value_index = 'zip-code-avg-rating-value-index'
+zip_code_avg_rating_value_index_pkey = 'zip-code'
+
 similarity_queue_name = 'duclos-app-similarity-queue'
 similar_users_dynamodb_table_name = 'duclos-app-similar-users'
 similar_users_dynamodb_table = dynamodb.Table(similar_users_dynamodb_table_name)
