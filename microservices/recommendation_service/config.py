@@ -14,6 +14,9 @@ user_ratings_dynamodb_table = dynamodb.Table(user_ratings_dynamodb_table_name)
 user_id_rating_value_index = 'user-id-rating-value-index'
 user_id_rating_value_index_pkey = 'user-id'
 
+restaurant_id_rating_value_index = 'restaurant-id-rating-value-index'
+restaurant_id_rating_value_index_pkey = 'restaurant-id'
+
 restaurant_dynamodb_table_name = 'duclos-app-restaurants'
 restaurant_dynamodb_table = dynamodb.Table(restaurant_dynamodb_table_name)
 zip_code_avg_rating_value_index = 'zip-code-avg-rating-value-index'

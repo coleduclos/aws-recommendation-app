@@ -1,4 +1,3 @@
-import sys, getopt
 import json
 from decimal import *
 import config
@@ -19,6 +18,7 @@ def update_recommendations(user_id):
     print('Updating recommendations for user: {}'.format(user_id))
     user_ratings_restaurant_id_list = []
     near_restaurant_id_list = []
+    recommendation_map = {}
     # Get similar users
     user_similarity_index_map = dynamodb_client.get_similarity_index_map_by_user_id(user_id)['Items']
     if len(user_similarity_index_map) > 0:
@@ -32,7 +32,18 @@ def update_recommendations(user_id):
         near_restaurant_id_list.append(restaurant['restaurant-id'])
     restaurants_not_rated = set(user_ratings_restaurant_id_list)^set(near_restaurant_id_list)
     for restaurant_id in restaurants_not_rated:
-        print restaurant_id
+        r_ratings = dynamodb_client.get_all_ratings_by_restaurant_id(restaurant_id)['Items']
+        probability_numerator = 0
+        probability_denominator = len(r_ratings)
+        for rating in r_ratings:
+            rating_user = rating['user-id']
+            rating_value = rating['rating-value']
+            rating_restaurant = rating['restaurant-id']
+            if rating_user in user_similarity_index_map:
+                probability_numerator = probability_numerator + user_similarity_index_map[rating_user] \
+                    if rating_value > 0 else probability_numerator - user_similarity_index_map[rating_user]
+            recommendation_map[rating_restaurant] = Decimal(probability_numerator) / Decimal(probability_denominator) 
+    print recommendation_map
 
 if __name__ == "__main__":
     main()

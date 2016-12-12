@@ -1,4 +1,3 @@
-import sys, getopt
 import json
 from decimal import *
 import config
