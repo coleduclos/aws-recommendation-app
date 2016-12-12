@@ -27,3 +27,8 @@ similar_users_dynamodb_table_name = 'duclos-app-similar-users'
 similar_users_dynamodb_table = dynamodb.Table(similar_users_dynamodb_table_name)
 similar_users_pkey = 'user-id'
 similarity_index_map_attribute = 'similarity-index-map'
+
+recommendations_dynamodb_table_name = 'duclos-app-recommendations'
+recommendations_dynamodb_table = dynamodb.Table(recommendations_dynamodb_table_name)
+recommendations_pkey = 'user-id'
+recommendation_map_attribute = 'recommendation-map'

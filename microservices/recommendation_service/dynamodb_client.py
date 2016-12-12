@@ -92,3 +92,32 @@ def update_user_similarity_index_map (user_id, similarity_index_map):
         }
     )
 
+def get_recommendation_map_by_user_id (user_id):
+    print('Querying DynamoDB for the recommendation map of user: {} in table {}'
+        .format(user_id, config.recommendations_dynamodb_table_name))
+    response = config.recommendations_dynamodb_table.query(
+        KeyConditionExpression='#partitionkey = :partitionkeyval',
+        ExpressionAttributeNames={
+            '#partitionkey' : config.recommendations_pkey
+        },
+        ExpressionAttributeValues={
+            ':partitionkeyval' : user_id
+        }
+    )
+    return response
+
+def update_user_recommendation_map (user_id, recommendation_map):
+    print('Updating DynamoDB with recommendation map for  user: {} in table {}'
+        .format(user_id, config.recommendations_dynamodb_table_name))
+    response = config.recommendations_dynamodb_table.update_item(
+        Key={
+            config.recommendations_pkey : user_id
+        },
+        UpdateExpression='SET #attribute = :val',
+        ExpressionAttributeNames={
+            '#attribute' : config.recommendation_map_attribute
+        },
+        ExpressionAttributeValues={
+            ':val' : recommendation_map
+        }
+    )
