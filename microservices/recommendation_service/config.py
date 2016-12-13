@@ -19,8 +19,8 @@ restaurant_id_rating_value_index_pkey = 'restaurant-id'
 
 restaurant_dynamodb_table_name = 'duclos-app-restaurants'
 restaurant_dynamodb_table = dynamodb.Table(restaurant_dynamodb_table_name)
-zip_code_avg_rating_value_index = 'zip-code-avg-rating-value-index'
-zip_code_avg_rating_value_index_pkey = 'zip-code'
+restaurants_pkey = 'geohash'
+restaurant_dynamodb_geohash_precision = 6
 
 similarity_queue_name = 'duclos-app-similarity-queue'
 similar_users_dynamodb_table_name = 'duclos-app-similar-users'

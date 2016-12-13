@@ -1,3 +1,4 @@
+import Geohash
 import config
 
 def get_all_ratings_by_user_id (user_id):
@@ -61,17 +62,17 @@ def get_similarity_index_map_by_user_id (user_id):
     )
     return response
 
-def get_all_restaurants_by_zip_code (zip_code):
-    print('Querying DynamoDB for all restaurants with zip code: {} in table {}'
-        .format(zip_code, config.restaurant_dynamodb_table_name))
+def get_near_restaurants_by_lat_long (latitude, longitude):
+    geohash = Geohash.encode(latitude, longitude, precision=config.restaurant_dynamodb_geohash_precision)
+    print('Querying DynamoDB for all restaurants with geohash: {} in table {}'
+        .format(geohash, config.restaurant_dynamodb_table_name))
     response = config.restaurant_dynamodb_table.query(
-        IndexName=config.zip_code_avg_rating_value_index,
         KeyConditionExpression='#partitionkey = :partitionkeyval',
         ExpressionAttributeNames={
-            '#partitionkey' : config.zip_code_avg_rating_value_index_pkey
+            '#partitionkey' : config.restaurants_pkey
         },
         ExpressionAttributeValues={
-            ':partitionkeyval' : zip_code 
+            ':partitionkeyval' : geohash 
         }
     )
     return response

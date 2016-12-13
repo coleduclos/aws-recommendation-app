@@ -10,8 +10,8 @@ def main():
 def process_messages(recommendation_queue):
     for message in recommendation_queue.receive_messages(MaxNumberOfMessages=config.max_queue_messages):
         # print("SQS Message: {}".format(message.body))
-        user_id = message.body
-        update_recommendations(user_id)
+        rating = json.loads(message.body)
+        update_recommendations(rating['user-id'])
         # message.delete()
         
 def update_recommendations(user_id):
@@ -32,7 +32,7 @@ def update_recommendations(user_id):
     user_ratings = dynamodb_client.get_all_ratings_by_user_id(user_id)['Items']
     for u_rating in user_ratings:
         user_ratings_restaurant_id_list.append(u_rating['restaurant-id'])
-    near_restaurants = dynamodb_client.get_all_restaurants_by_zip_code('94109')['Items']
+    near_restaurants = dynamodb_client.get_near_restaurants_by_lat_long(37.7929020, -122.4291190)['Items']
     for restaurant in near_restaurants:
         near_restaurant_id_list.append(restaurant['restaurant-id'])
     restaurants_not_rated = set(user_ratings_restaurant_id_list)^set(near_restaurant_id_list)
