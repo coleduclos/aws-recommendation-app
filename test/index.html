@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Foodle</title>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+        <meta charset="utf-8">
+        <script type="text/javascript" src="http://code.jquery.com/jquery-3.1.1.min.js"></script>
+        <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        <style>
+            /* Always set the map height explicitly to define the size of the div
+            * element that contains the map. */
+            #map {
+                height: 80%;
+            }
+            #item_scroll_bar {
+                height: 20%;
+                white-space: nowrap;
+                overflow-x: scroll;
+                overflow-y: hidden;
+            }
+            .scroll_item {
+                height: 100%;
+                width: 150px;
+                margin: 10px;
+                padding: 10px;
+                display: inline-block;
+                background-color: red;
+                text-align: center;
+            }
+            /* Optional: Makes the sample page fill the window. */
+            html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+        <script>
+
+            var map;
+            var infowindow;
+            var service;
+
+            $( function() {
+                dialog = $( '#item_dialog' ).dialog({
+                    autoOpen: false,
+                    height: 400,
+                    width: 350,
+                    buttons: {
+                        'Meh...': function(){ rateItem(0); $(this).dialog("close"); },
+                        'Delish!' : function(){ rateItem(1); $(this).dialog("close"); }
+                    },
+                    close: function() {
+                    }
+                });
+
+                $( '#item_scroll_bar' ).on('click', 'div.scroll_item', function() {
+                    var request = {
+                        placeId: $(this).attr('id')
+                    };
+                    service.getDetails(request, getDetailsCallback);
+                });
+
+            });
+
+            function getDetailsCallback(item)
+            {
+                console.log('DETAILS')
+                console.log(item)
+                $('#item_dialog #item_name').text(item.name)
+                $('#item_dialog #item_address').text(item.formatted_address)
+                $('#item_dialog #item_phone_number').text(item.formatted_phone_number)
+                $('#item_dialog #item_rating').text(item.rating)
+                dialog.dialog( 'open' );
+            }
+
+            function rateItem(rating_value)
+            {
+                console.log('Rating item: ' + rating_value)
+            }
+
+            function initPage() {
+                var pos = {lat: -33.867, lng: 151.195};
+                // Try HTML5 geolocation.
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            pos = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            };
+                            initMap(pos);
+
+                        }, 
+                        function() {
+                            handleLocationError(true);
+                        }
+                    );
+                } 
+                else {
+                    // Browser doesn't support Geolocation
+                    initMap(pos)
+                    handleLocationError(false);
+                }
+            }
+
+            function initMap(pos) 
+            {
+
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: pos,
+                    zoom: 15
+                });
+
+                infowindow = new google.maps.InfoWindow();
+                service = new google.maps.places.PlacesService(map);
+                service.nearbySearch({
+                    location: pos,
+                    radius: 1000,
+                    type: ['restaurant']
+                }, initMapCallback);
+            }
+
+            function initMapCallback(results, status) 
+            {
+                if (status === google.maps.places.PlacesServiceStatus.OK) 
+                {
+                    for (var i = 0; i < results.length; i++) 
+                    {
+                        createMarker(results[i]);
+                        createScrollItem(results[i]);
+                    }
+                }
+            }
+
+            function createMarker(place) 
+            {
+                var placeLoc = place.geometry.location;
+                var marker = new google.maps.Marker({
+                    map: map,
+                    position: place.geometry.location
+                });
+
+                google.maps.event.addListener(marker, 'click', function() {
+                    console.log(place)
+                    infowindow.setContent(place.name);
+                    infowindow.open(map, this);
+                });
+            }
+
+            function createScrollItem(place)
+            {
+                item_div = '<div class="scroll_item" id="' + place.place_id + '">' + 
+                    place.name +
+                    '<br>' +
+                    place.rating + 
+                    '</div>'
+                $('#item_scroll_bar').append(item_div)
+            }
+
+            function handleLocationError(browserHasGeolocation) 
+            {
+            }
+        </script>
+    </head>
+    <body>
+        <div id="map"></div>
+        <div id="item_scroll_bar"></div>
+        <div id="item_dialog" title="Test Title">
+            <div id="item_name">Name</div>
+            <div id="item_address">Address</div>
+            <div id="item_phone_number">Phone Number</div>
+            <div id="item_rating">Test Rating</div>
+        </div>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAs5D07wQNNTA5r1HPbcZJLPcRD2rGSOJg&libraries=places&callback=initPage" async defer></script>
+    </body>
+</html>
