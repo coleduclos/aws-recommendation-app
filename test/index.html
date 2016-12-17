@@ -4,12 +4,11 @@
         <title>Foodle</title>
         <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
         <meta charset="utf-8">
-        <script type="text/javascript" src="http://code.jquery.com/jquery-3.1.1.min.js"></script>
-        <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-        <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        
         <style>
-            /* Always set the map height explicitly to define the size of the div
-            * element that contains the map. */
             #map {
                 height: 80%;
             }
@@ -19,16 +18,15 @@
                 overflow-x: scroll;
                 overflow-y: hidden;
             }
-            .scroll_item {
+            .scroll_card {
                 height: 100%;
                 width: 150px;
                 margin: 10px;
                 padding: 10px;
                 display: inline-block;
-                background-color: red;
-                text-align: center;
+                white-space: normal;
+                vertical-align: text-top;
             }
-            /* Optional: Makes the sample page fill the window. */
             html, body {
                 height: 100%;
                 margin: 0;
@@ -40,48 +38,98 @@
             var map;
             var infowindow;
             var service;
+            var current_item;
+            var dislike_value = 0;
+            var like_value = 1;
 
             $( function() {
-                dialog = $( '#item_dialog' ).dialog({
-                    autoOpen: false,
-                    height: 400,
-                    width: 350,
-                    buttons: {
-                        'Meh...': function(){ rateItem(0); $(this).dialog("close"); },
-                        'Delish!' : function(){ rateItem(1); $(this).dialog("close"); }
-                    },
-                    close: function() {
-                    }
-                });
 
-                $( '#item_scroll_bar' ).on('click', 'div.scroll_item', function() {
+                $( '#item_scroll_bar' ).on('click', 'div.scroll_card', function() {
                     var request = {
                         placeId: $(this).attr('id')
                     };
                     service.getDetails(request, getDetailsCallback);
                 });
 
+                $('.rate_button').click(function(){
+                    var rating_value;
+                    var button_id = $(this).attr('id');
+                    if (button_id == 'like_button')
+                        rating_value = like_value
+                    else if (button_id == 'dislike_button')
+                        rating_value = dislike_value
+                    rateItem(rating_value)
+                });
+
             });
 
             function getDetailsCallback(item)
             {
-                console.log('DETAILS')
-                console.log(item)
-                $('#item_dialog #item_name').text(item.name)
-                $('#item_dialog #item_address').text(item.formatted_address)
-                $('#item_dialog #item_phone_number').text(item.formatted_phone_number)
-                $('#item_dialog #item_rating').text(item.rating)
-                dialog.dialog( 'open' );
+                current_item = item
+                $('#item_modal .modal-content #item_name').text(item.name)
+                $('#item_modal .modal-content #item_address').text(item.formatted_address)
+                $('#item_modal .modal-content #item_phone_number').text(item.formatted_phone_number)
+                $('#item_modal .modal-content #item_rating').text(item.rating)
+                $('#item_modal').modal('show')
             }
 
             function rateItem(rating_value)
             {
-                console.log('Rating item: ' + rating_value)
+                var current_date = new Date()
+                var current_date_timestamp = "" +
+                    current_date.getUTCFullYear() +
+                    current_date.getUTCMonth() + 
+                    current_date.getUTCDate() + 'T' + 
+                    current_date.getUTCHours() + 
+                    current_date.getUTCMinutes() + 
+                    current_date.getUTCSeconds() + 'Z'
+                console.log('Rating item: ' + rating_value + ' at ' + current_date_timestamp)
+                console.log(current_item)
+
+                var jqxhr = $.ajax( 
+                    { 
+                        url: "https://i5jasr6flc.execute-api.us-west-2.amazonaws.com/prod/duclos-app-rating",
+                        method: 'POST',
+                        crossDomain: true,
+                        data: { 
+                            'user-id': '101', 
+                            'restaurant-id': '206',
+                            'rating_value' : 0
+                        },
+                        headers: {
+                            'x-amz-date' : current_date_timestamp,
+                            'x-api-key' : 'BbIDhSwuhj9AO4c3X6xmJ5iKhk3L8IvL5AwvMMn2'
+                        },
+                        dataType: 'json',
+                    })
+                    .done(function() {
+                        alert( "second success" );
+                    })
+                    .fail(function() {
+                        alert( "error" );
+                    });
+                
+                /*var xhr = new XMLHttpRequest();
+                xhr.open("POST", "https://i5jasr6flc.execute-api.us-west-2.amazonaws.com/prod/duclos-app-rating", true);
+                xhr.setRequestHeader('x-amz-date', current_date_timestamp)
+                //xhr.setRequestHeader('x-api-key', 'BbIDhSwuhj9AO4c3X6xmJ5iKhk3L8IvL5AwvMMn2')
+                xhr.setRequestHeader('Content-Type', 'application/json')
+
+                xhr.onreadystatechange = function()
+                {
+                    if (xhr.readyState == 4)
+                    {
+                        console.log('in on ready statechange')
+                        console.log(xhr)
+                    }
+                }
+                xhr.send();
+                */
             }
 
             function initPage() {
                 var pos = {lat: -33.867, lng: 151.195};
-                // Try HTML5 geolocation.
+                // Try HTML5 geolocation
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         function(position) {
@@ -128,7 +176,7 @@
                     for (var i = 0; i < results.length; i++) 
                     {
                         createMarker(results[i]);
-                        createScrollItem(results[i]);
+                        createItemCards(results[i]);
                     }
                 }
             }
@@ -148,29 +196,44 @@
                 });
             }
 
-            function createScrollItem(place)
+            function createItemCards(place)
             {
-                item_div = '<div class="scroll_item" id="' + place.place_id + '">' + 
-                    place.name +
-                    '<br>' +
-                    place.rating + 
-                    '</div>'
+                item_div = '<div class="scroll_card card" id="' + place.place_id + '"><div class="card-block">' + 
+                    '<h5 class="card-title">' + place.name + '</h5>' +
+                    '<p class="card-text">' + place.rating + '</p>'
+                    '</div></div>'
                 $('#item_scroll_bar').append(item_div)
             }
 
             function handleLocationError(browserHasGeolocation) 
             {
+                console.log('ERROR: Location service')
             }
         </script>
     </head>
     <body>
         <div id="map"></div>
         <div id="item_scroll_bar"></div>
-        <div id="item_dialog" title="Test Title">
-            <div id="item_name">Name</div>
-            <div id="item_address">Address</div>
-            <div id="item_phone_number">Phone Number</div>
-            <div id="item_rating">Test Rating</div>
+
+        <div id="item_modal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title" id="item_name">Name</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p id="item_address">Address</p>
+                        <p id="item_phone_number">Phone Number</p>
+                        <p id="item_rating">Rating</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="dislike_button" type="button" class="btn btn-default rate_button" data-dismiss="modal">Meh...</button>
+                        <button id="like_button" type="button" class="btn btn-default rate_button" data-dismiss="modal">Delish!</button>
+                    </div>
+                </div>
+            </div>
         </div>
         <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAs5D07wQNNTA5r1HPbcZJLPcRD2rGSOJg&libraries=places&callback=initPage" async defer></script>
     </body>
