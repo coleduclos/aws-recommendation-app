@@ -85,17 +85,22 @@
                     current_date.getUTCSeconds() + 'Z'
                 console.log('Rating item: ' + rating_value + ' at ' + current_date_timestamp)
                 console.log(current_item)
+                console.log(JSON.stringify(current_item))
 
                 var jqxhr = $.ajax( 
                     { 
                         url: "https://i5jasr6flc.execute-api.us-west-2.amazonaws.com/prod/duclos-app-rating",
                         method: 'POST',
                         crossDomain: true,
-                        data: { 
+                        data: JSON.stringify({ 
                             'user-id': '101', 
-                            'restaurant-id': '206',
-                            'rating_value' : 0
-                        },
+                            'rating-value' : rating_value,
+                            'restaurant' : {
+                                'restaurant-id' : current_item.place_id,
+                                'restautant-name' : current_item.name,
+                                'restaurant-location': current_item.geometry.location
+                            }
+                        }),
                         headers: {
                             'x-amz-date' : current_date_timestamp,
                             'x-api-key' : 'BbIDhSwuhj9AO4c3X6xmJ5iKhk3L8IvL5AwvMMn2'
@@ -103,28 +108,12 @@
                         dataType: 'json',
                     })
                     .done(function() {
-                        alert( "second success" );
+                        alert( "SUCCESS!" );
                     })
-                    .fail(function() {
-                        alert( "error" );
+                    .fail(function(xhr) {
+                        alert( "ERROR: " + xhr.responseText );
                     });
                 
-                /*var xhr = new XMLHttpRequest();
-                xhr.open("POST", "https://i5jasr6flc.execute-api.us-west-2.amazonaws.com/prod/duclos-app-rating", true);
-                xhr.setRequestHeader('x-amz-date', current_date_timestamp)
-                //xhr.setRequestHeader('x-api-key', 'BbIDhSwuhj9AO4c3X6xmJ5iKhk3L8IvL5AwvMMn2')
-                xhr.setRequestHeader('Content-Type', 'application/json')
-
-                xhr.onreadystatechange = function()
-                {
-                    if (xhr.readyState == 4)
-                    {
-                        console.log('in on ready statechange')
-                        console.log(xhr)
-                    }
-                }
-                xhr.send();
-                */
             }
 
             function initPage() {
