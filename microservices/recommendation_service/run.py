@@ -9,8 +9,9 @@ def main():
 
 def process_messages(recommendation_queue):
     for message in recommendation_queue.receive_messages(MaxNumberOfMessages=config.max_queue_messages):
-        # print("SQS Message: {}".format(message.body))
+        print("SQS Message: {}".format(message.body))
         rating = json.loads(message.body)
+        dynamodb_client.update_restaurant(rating['restaurant'])
         update_recommendations(rating['user-id'])
         # message.delete()
         

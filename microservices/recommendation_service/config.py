@@ -19,7 +19,8 @@ restaurant_id_rating_value_index_pkey = 'restaurant-id'
 
 restaurant_dynamodb_table_name = 'duclos-app-restaurants'
 restaurant_dynamodb_table = dynamodb.Table(restaurant_dynamodb_table_name)
-restaurants_pkey = 'geohash'
+restaurant_pkey = 'geohash'
+restaurant_skey = 'restaurant-id'
 restaurant_dynamodb_geohash_precision = 6
 
 similarity_queue_name = 'duclos-app-similarity-queue'

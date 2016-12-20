@@ -1,5 +1,6 @@
 import Geohash
 import config
+import decimal
 
 def get_all_ratings_by_user_id (user_id):
     print('Querying DynamoDB for all ratings from user: {} in table {}'
@@ -62,21 +63,6 @@ def get_similarity_index_map_by_user_id (user_id):
     )
     return response
 
-def get_near_restaurants_by_lat_long (latitude, longitude):
-    geohash = Geohash.encode(latitude, longitude, precision=config.restaurant_dynamodb_geohash_precision)
-    print('Querying DynamoDB for all restaurants with geohash: {} in table {}'
-        .format(geohash, config.restaurant_dynamodb_table_name))
-    response = config.restaurant_dynamodb_table.query(
-        KeyConditionExpression='#partitionkey = :partitionkeyval',
-        ExpressionAttributeNames={
-            '#partitionkey' : config.restaurants_pkey
-        },
-        ExpressionAttributeValues={
-            ':partitionkeyval' : geohash 
-        }
-    )
-    return response
-
 def update_user_similarity_index_map (user_id, similarity_index_map):
     print('Updating DynamoDB with similarity index map for  user: {} in table {}'
         .format(user_id, config.similar_users_dynamodb_table_name))
@@ -122,3 +108,47 @@ def update_user_recommendation_map (user_id, recommendation_map):
             ':val' : recommendation_map
         }
     )
+
+def get_near_restaurants_by_lat_long (latitude, longitude):
+    geohash = Geohash.encode(latitude, longitude, precision=config.restaurant_dynamodb_geohash_precision)
+    print('Querying DynamoDB for all restaurants with geohash: {} in table {}'
+        .format(geohash, config.restaurant_dynamodb_table_name))
+    response = config.restaurant_dynamodb_table.query(
+        KeyConditionExpression='#partitionkey = :partitionkeyval',
+        ExpressionAttributeNames={
+            '#partitionkey' : config.restaurants_pkey
+        },
+        ExpressionAttributeValues={
+            ':partitionkeyval' : geohash 
+        }
+    )
+    return response
+
+def update_restaurant(restaurant):
+    print('Updating DynamoDB with restaurant {} in table {}'
+        .format(restaurant['restaurant-id'], config.restaurant_dynamodb_table_name))
+
+    geohash = Geohash.encode(restaurant['restaurant-location']['lat'], restaurant['restaurant-location']['lng'], 
+        precision=config.restaurant_dynamodb_geohash_precision)
+
+    print('DYNAMODB: Adding restaurant: {} ({})'.format(restaurant['restaurant-id'], geohash))
+
+    response = config.restaurant_dynamodb_table.update_item(
+        Key={
+            config.restaurant_pkey: geohash,
+            config.restaurant_skey: restaurant['restaurant-id']
+        },
+        UpdateExpression="SET #restaurant_name = :restaurant_name, #number_of_ratings = #number_of_ratings + :val",
+        ExpressionAttributeNames={
+            '#restaurant_name' : 'restaurant-name',
+            '#number_of_ratings' : 'number-of-ratings'
+        },
+        ExpressionAttributeValues={
+            ':restaurant_name' : restaurant['restaurant-name'],
+            ':val' : decimal.Decimal(1)
+        },
+        ReturnValues="UPDATED_NEW"
+    )
+
+    return response
+
