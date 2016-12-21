@@ -7,6 +7,13 @@
         <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <script src="./javascript/jsbn.js"></script>
+        <script src="./javascript/jsbn2.js"></script>
+        <script src="./javascript/sjcl.js"></script>
+        <script src="./javascript/aws-cognito-sdk.min.js"></script>
+        <script src="./javascript/amazon-cognito-identity.min.js"></script>
+        <script src="https://sdk.amazonaws.com/js/aws-sdk-2.6.10.min.js"></script>
+        <script src="./javascript/user-service.js"></script>
         
         <style>
             #map {
@@ -39,8 +46,41 @@
             var infowindow;
             var service;
             var current_item;
+            var user_attributes = {};
             var dislike_value = 0;
             var like_value = 1;
+            var cognito_user = userPool.getCurrentUser();
+
+            if (cognito_user != null) {
+                cognito_user.getSession(function(err, session) {
+                    if (err) {
+                       alert(err);
+                        return;
+                    }
+                    console.log('session validity: ' + session.isValid());
+
+                    AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+                        IdentityPoolId : '...', // your identity pool id here
+                        Logins : {
+                            // Change the key below according to the specific region your user pool is in.
+                            cognito_login_key : session.getIdToken().getJwtToken()
+                        }
+                    });
+
+                    cognito_user.getUserAttributes(function(err, result) {
+                        if (err) {
+                            alert(err);
+                            return;
+                        }
+                        for (i = 0; i < result.length; i++) 
+                        {
+                            user_attributes[result[i].getName()] = user_id = result[i].getValue()
+                        }
+                        console.log(user_attributes)
+                    });
+
+                });
+            }
 
             $( function() {
 
@@ -85,7 +125,6 @@
                     current_date.getUTCSeconds() + 'Z'
                 console.log('Rating item: ' + rating_value + ' at ' + current_date_timestamp)
                 console.log(current_item)
-                console.log(JSON.stringify(current_item))
 
                 var jqxhr = $.ajax( 
                     { 
@@ -93,12 +132,15 @@
                         method: 'POST',
                         crossDomain: true,
                         data: JSON.stringify({ 
-                            'user-id': '101', 
+                            'user-id': user_attributes['sub'], 
                             'rating-value' : rating_value,
                             'restaurant' : {
                                 'restaurant-id' : current_item.place_id,
-                                'restautant-name' : current_item.name,
-                                'restaurant-location': current_item.geometry.location
+                                'restaurant-name' : current_item.name,
+                                'restaurant-location': {
+                                    'lat' : current_item.geometry.location.lat(),
+                                    'lng' : current_item.geometry.location.lng()
+                                }
                             }
                         }),
                         headers: {
