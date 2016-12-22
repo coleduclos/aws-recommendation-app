@@ -15,7 +15,7 @@ def process_messages(similarity_queue):
         rating = json.loads(event['body'])
         update_similar_users(rating)
         recommendation_queue.send_message(MessageBody=json.dumps(rating))
-        # message.delete()
+        message.delete()
         
 def update_similar_users(rating):
     compared_user_list = [] 

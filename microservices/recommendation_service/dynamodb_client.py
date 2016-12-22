@@ -110,10 +110,10 @@ def update_user_recommendation_map (user_id, recommendation_map):
     )
 
 def get_near_restaurants_by_lat_long (latitude, longitude):
-    geohash = Geohash.encode(latitude, longitude, precision=config.restaurant_dynamodb_geohash_precision)
+    geohash = Geohash.encode(latitude, longitude, precision=config.restaurants_dynamodb_geohash_precision)
     print('Querying DynamoDB for all restaurants with geohash: {} in table {}'
-        .format(geohash, config.restaurant_dynamodb_table_name))
-    response = config.restaurant_dynamodb_table.query(
+        .format(geohash, config.restaurants_dynamodb_table_name))
+    response = config.restaurants_dynamodb_table.query(
         KeyConditionExpression='#partitionkey = :partitionkeyval',
         ExpressionAttributeNames={
             '#partitionkey' : config.restaurants_pkey
@@ -126,26 +126,24 @@ def get_near_restaurants_by_lat_long (latitude, longitude):
 
 def update_restaurant(restaurant):
     print('Updating DynamoDB with restaurant {} in table {}'
-        .format(restaurant['restaurant-id'], config.restaurant_dynamodb_table_name))
+        .format(restaurant['restaurant-id'], config.restaurants_dynamodb_table_name))
 
     geohash = Geohash.encode(restaurant['restaurant-location']['lat'], restaurant['restaurant-location']['lng'], 
-        precision=config.restaurant_dynamodb_geohash_precision)
+        precision=config.restaurants_dynamodb_geohash_precision)
 
     print('DYNAMODB: Adding restaurant: {} ({})'.format(restaurant['restaurant-id'], geohash))
 
-    response = config.restaurant_dynamodb_table.update_item(
+    response = config.restaurants_dynamodb_table.update_item(
         Key={
-            config.restaurant_pkey: geohash,
-            config.restaurant_skey: restaurant['restaurant-id']
+            config.restaurants_pkey: geohash,
+            config.restaurants_skey: restaurant['restaurant-id']
         },
-        UpdateExpression="SET #restaurant_name = :restaurant_name, #number_of_ratings = #number_of_ratings + :val",
+        UpdateExpression="SET #restaurant_name = :restaurant_name",
         ExpressionAttributeNames={
-            '#restaurant_name' : 'restaurant-name',
-            '#number_of_ratings' : 'number-of-ratings'
+            '#restaurant_name' : 'restaurant-name'
         },
         ExpressionAttributeValues={
-            ':restaurant_name' : restaurant['restaurant-name'],
-            ':val' : decimal.Decimal(1)
+            ':restaurant_name' : restaurant['restaurant-name']
         },
         ReturnValues="UPDATED_NEW"
     )
