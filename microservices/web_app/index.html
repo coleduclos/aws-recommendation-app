@@ -50,6 +50,7 @@
             var dislike_value = 0;
             var like_value = 1;
             var cognito_user = userPool.getCurrentUser();
+            var session_id_token;
 
             if (cognito_user != null) {
                 cognito_user.getSession(function(err, session) {
@@ -58,7 +59,7 @@
                         return;
                     }
                     console.log('session validity: ' + session.isValid());
-
+                    
                     AWS.config.credentials = new AWS.CognitoIdentityCredentials({
                         IdentityPoolId : '...', // your identity pool id here
                         Logins : {
@@ -66,6 +67,8 @@
                             cognito_login_key : session.getIdToken().getJwtToken()
                         }
                     });
+
+                    session_id_token = session.getIdToken().getJwtToken()
 
                     cognito_user.getUserAttributes(function(err, result) {
                         if (err) {
@@ -79,29 +82,31 @@
                         console.log(user_attributes)
                     });
 
+                    $( function() {
+
+                        $( '#item_scroll_bar' ).on('click', 'div.scroll_card', function() {
+                            var request = {
+                                placeId: $(this).attr('id')
+                            };
+                            service.getDetails(request, getDetailsCallback);
+                        });
+
+                        $('.rate_button').click(function(){
+                            var rating_value;
+                            var button_id = $(this).attr('id');
+                            if (button_id == 'like_button')
+                                rating_value = like_value
+                            else if (button_id == 'dislike_button')
+                                rating_value = dislike_value
+                            rateItem(rating_value)
+                        });
+
+                    });
+
                 });
             }
 
-            $( function() {
 
-                $( '#item_scroll_bar' ).on('click', 'div.scroll_card', function() {
-                    var request = {
-                        placeId: $(this).attr('id')
-                    };
-                    service.getDetails(request, getDetailsCallback);
-                });
-
-                $('.rate_button').click(function(){
-                    var rating_value;
-                    var button_id = $(this).attr('id');
-                    if (button_id == 'like_button')
-                        rating_value = like_value
-                    else if (button_id == 'dislike_button')
-                        rating_value = dislike_value
-                    rateItem(rating_value)
-                });
-
-            });
 
             function getDetailsCallback(item)
             {
@@ -115,17 +120,9 @@
 
             function rateItem(rating_value)
             {
-                var current_date = new Date()
-                var current_date_timestamp = "" +
-                    current_date.getUTCFullYear() +
-                    current_date.getUTCMonth() + 
-                    current_date.getUTCDate() + 'T' + 
-                    current_date.getUTCHours() + 
-                    current_date.getUTCMinutes() + 
-                    current_date.getUTCSeconds() + 'Z'
-                console.log('Rating item: ' + rating_value + ' at ' + current_date_timestamp)
                 console.log(current_item)
-
+                console.log('Rating item: ' + rating_value)
+                
                 var jqxhr = $.ajax( 
                     { 
                         url: "https://i5jasr6flc.execute-api.us-west-2.amazonaws.com/prod/duclos-app-rating",
@@ -144,8 +141,7 @@
                             }
                         }),
                         headers: {
-                            'x-amz-date' : current_date_timestamp,
-                            'x-api-key' : 'BbIDhSwuhj9AO4c3X6xmJ5iKhk3L8IvL5AwvMMn2'
+                            'Authorization' : session_id_token
                         },
                         dataType: 'json',
                     })
@@ -153,7 +149,7 @@
                         alert( "SUCCESS!" );
                     })
                     .fail(function(xhr) {
-                        alert( "ERROR: " + xhr.responseText );
+                        alert( "ERROR: " + xhr );
                     });
                 
             }
