@@ -58,7 +58,6 @@
                        alert(err);
                         return;
                     }
-                    console.log('session validity: ' + session.isValid());
                     
                     AWS.config.credentials = new AWS.CognitoIdentityCredentials({
                         IdentityPoolId : '...', // your identity pool id here

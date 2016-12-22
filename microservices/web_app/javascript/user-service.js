@@ -33,7 +33,6 @@ function cognitoLogin(user_email, user_password)
 
     cognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: function (result) {
-            console.log('access token + ' + result.getAccessToken().getJwtToken());
             
             AWS.config.credentials = new AWS.CognitoIdentityCredentials({
                 IdentityPoolId : cognito_identity_pool_id,
