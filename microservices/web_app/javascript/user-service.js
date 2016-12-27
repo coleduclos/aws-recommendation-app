@@ -15,7 +15,7 @@ var poolData = {
 };
 var userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
 
-function cognitoLogin(user_email, user_password) 
+function loginUser(user_email, user_password) 
 {   
     var authenticationData = {
         Username : user_email,
@@ -54,7 +54,7 @@ function cognitoLogin(user_email, user_password)
     });
 }
 
-function cognitoRegister(user_email, user_password)
+function registerUser(user_email, user_password)
 {
     var attributeList = [];
 
