@@ -49,7 +49,6 @@ def lambda_handler(event, context):
     operation = event['httpMethod']
 
     if operation in operations:
-        print event['pathParameters']
         if operation == 'GET':
             payload = event['pathParameters']
             dynamo_table = payload['dynamo-table']
@@ -58,7 +57,7 @@ def lambda_handler(event, context):
                 response = operations[operation](dynamo, dynamo_tables[dynamo_table], payload)
             else:
                 return respond(ValueError('Unsupported query "{}"'.format(dynamo_table)))
-                
+
         if 'Items' in response:
             response = response['Items']
         else:
