@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Foodle</title>
+        <title>Spoon Feed</title>
         <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
         <meta charset="utf-8">
         <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
@@ -79,6 +79,7 @@
                             user_attributes[result[i].getName()] = user_id = result[i].getValue()
                         }
                         console.log(user_attributes)
+                        getRecommendations()
                     });
 
                     $( function() {
@@ -100,12 +101,34 @@
                             rateItem(rating_value)
                         });
 
+
+
                     });
 
                 });
             }
 
-
+            function getRecommendations()
+            {
+                var jqxhr = $.ajax( 
+                { 
+                    url: 'https://i5jasr6flc.execute-api.us-west-2.amazonaws.com/prod/duclos-app-restaurant/recommendations/' + user_attributes['sub'],
+                    method: 'GET',
+                    crossDomain: true,
+                    headers: {
+                        'Authorization' : session_id_token
+                    },
+                    dataType: 'json',
+                })
+                .done(function(response) {
+                    console.log("Get Recommendations: SUCCESS")
+                    console.log(response[0]['recommendation-map'])
+                })
+                .fail(function(xhr) {
+                    console.log(xhr)
+                    alert( "ERROR: " + xhr );
+                });
+            }
 
             function getDetailsCallback(item)
             {
