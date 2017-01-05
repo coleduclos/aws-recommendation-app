@@ -20,3 +20,4 @@ phases:
 artifacts:
     files:
         - microservices/similarity_service/similarity-service-stack.template
+    discard-paths: yes
