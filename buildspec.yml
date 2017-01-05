@@ -1,11 +1,5 @@
 version: 0.1
 
-environment_variables:
-    plaintext:
-        AWS_REGION: "us-west-2"
-        IMAGE_REPO_NAME: "duclos-app/similarity-service"
-        IMAGE_TAG: "test"
-
 phases:
     pre_build:
         commands:
@@ -14,10 +8,9 @@ phases:
     build:
         commands:
             - echo Building similarity-service
-            - cd microservices/similarity_service
             - echo Build started on `date`
             - echo Building the Docker image...          
-            - docker build -t $IMAGE_REPO_NAME .
+            - docker build -t $IMAGE_REPO_NAME $DOCKERFILE_PATH/.
             - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG      
     post_build:
         commands:
