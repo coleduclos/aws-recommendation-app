@@ -20,4 +20,5 @@ phases:
 artifacts:
     files:
         - microservices/similarity_service/similarity-service-stack.json
+        - microservices/similarity_service/similarity-service-stack-config.json
     discard-paths: yes
